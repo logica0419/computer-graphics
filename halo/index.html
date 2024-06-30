@@ -1,0 +1,217 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/three@0.137.4/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.137.4/examples/js/controls/OrbitControls.js"></script>
+  </head>
+  <body>
+    <script>
+      const init = () => {
+        // アニメーションのステップ数
+        let step = 0
+
+        // サイズを指定
+        const width = 800
+        const height = 600
+
+        // レンダラーを作成
+        const renderer = new THREE.WebGLRenderer()
+        document.body.appendChild(renderer.domElement)
+        renderer.setSize(width, height)
+        renderer.shadowMap.enabled = true
+
+        // シーンを作成
+        const scene = new THREE.Scene()
+
+        // カメラを作成
+        const camera = new THREE.PerspectiveCamera(45, width / height)
+        camera.position.set(0, 2, 5)
+        // カメラコントローラーを作成
+        const controls = new THREE.OrbitControls(camera, document.body)
+
+        // 平行光源1
+        const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.5)
+        directionalLight1.position.set(10, 10, 10)
+        directionalLight1.castShadow = true
+        scene.add(directionalLight1)
+        // 平行光源2
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff)
+        directionalLight2.position.set(-20, -20, 20)
+        directionalLight2.castShadow = true
+        scene.add(directionalLight2)
+        // 点光源
+        const light = new THREE.PointLight(0xffffff, 1.5, 50, 5)
+        light.position.set(2, 2, 4)
+        light.castShadow = true
+        scene.add(light)
+
+        // --------------------- Center ---------------------
+
+        const center = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.5),
+          new THREE.MeshPhongMaterial({
+            color: 0xaaaaaa,
+            shininess: 100,
+          })
+        )
+        center.position.set(0, 0, 0)
+        center.scale.set(0.5, 1.2, 0.5)
+        center.castShadow = true
+        center.receiveShadow = true
+
+        scene.add(center)
+
+        // --------------------- Base ---------------------
+
+        const base1 = new THREE.Group()
+
+        const torus1 = new THREE.Mesh(
+          new THREE.TorusGeometry(1.5, 0.01, 16, 100),
+          new THREE.MeshPhongMaterial({
+            color: 0xaaaaaa,
+            shininess: 100,
+          })
+        )
+        torus1.rotation.x = Math.PI / 2
+        torus1.scale.set(1, 1, 20)
+        torus1.castShadow = true
+        torus1.receiveShadow = true
+        base1.add(torus1)
+
+        for (let i = 0; i < 4; i++) {
+          const torus2 = new THREE.Mesh(
+            new THREE.TorusGeometry(1.3, 0.04, 16, 100, Math.PI / 3),
+            new THREE.MeshPhongMaterial({
+              color: 0xaaaaaa,
+              shininess: 100,
+            })
+          )
+          torus2.rotation.x = Math.PI / 2
+          torus2.rotation.z = (Math.PI / 2) * i
+          torus2.castShadow = true
+          base1.add(torus2)
+        }
+
+        scene.add(base1)
+
+        const base2 = new THREE.Group()
+
+        for (let i = 0; i < 7; i++) {
+          const torus3 = new THREE.Mesh(
+            new THREE.TorusGeometry(0.7, 0.03, 16, 100, Math.PI / 5),
+            new THREE.MeshPhongMaterial({
+              color: 0xaaaaaa,
+              shininess: 100,
+            })
+          )
+          torus3.rotation.x = Math.PI / 2
+          torus3.rotation.z = (Math.PI / 3.5) * i
+          torus3.castShadow = true
+          base2.add(torus3)
+        }
+
+        for (let i = 0; i < 7; i++) {
+          const torus4 = new THREE.Mesh(
+            new THREE.TorusGeometry(0.6, 0.02, 16, 100, Math.PI / 5.5),
+            new THREE.MeshPhongMaterial({
+              color: 0xaaaaaa,
+              shininess: 100,
+            })
+          )
+          torus4.rotation.x = Math.PI / 2
+          torus4.rotation.z = (Math.PI / 3.5) * (i + 0.5)
+          torus4.castShadow = true
+          base2.add(torus4)
+        }
+
+        scene.add(base2)
+
+        // --------------------- Marble ---------------------
+        const marble = new THREE.Group()
+        let marbleVelocity = 0.004
+
+        for (let v of [0, 1, 2, 3]) {
+          for (let i = 0; i < 4; i++) {
+            const sphere = new THREE.Mesh(
+              new THREE.SphereGeometry(0.08 - 0.01 * i),
+              new THREE.MeshPhongMaterial({
+                color: 0xaaaaaa,
+                shininess: 100,
+              })
+            )
+            let radian = i * (Math.PI / 15) + (v * Math.PI) / 2
+            sphere.position.set(Math.cos(radian), 0, Math.sin(radian))
+            sphere.castShadow = true
+            sphere.receiveShadow = true
+            marble.add(sphere)
+          }
+        }
+
+        scene.add(marble)
+
+        // --------------------- Edge ---------------------
+        const edge = new THREE.Group()
+
+        for (let v of [-1, 1]) {
+          const cylinder = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.7, 0.7, 0.02, 6),
+            new THREE.MeshPhongMaterial({
+              color: 0xaaaaaa,
+              shininess: 100,
+            })
+          )
+          cylinder.position.set(0, v * 0.8, 0)
+          cylinder.castShadow = true
+          cylinder.receiveShadow = true
+          edge.add(cylinder)
+
+          const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1),
+            new THREE.MeshPhongMaterial({
+              color: 0xaaaaaa,
+              shininess: 100,
+            })
+          )
+          sphere.position.set(0, v * 0.8, 0)
+          sphere.castShadow = true
+          sphere.receiveShadow = true
+          edge.add(sphere)
+        }
+
+        scene.add(edge)
+
+        // 毎フレーム時に実行されるループイベントです
+        const update = () => {
+          step++
+
+          center.rotation.y -= 0.01
+
+          if (Math.floor(step / 200) % 2 == 0) {
+            base1.rotation.y += 0.01
+            base2.rotation.y -= 0.01
+          }
+
+          switch (Math.floor(step / 150) % 3) {
+            case 1:
+              marbleVelocity += 0.0005
+              break
+
+            case 2:
+              marbleVelocity -= 0.0005
+              break
+          }
+          marble.rotation.y += marbleVelocity
+
+          // レンダリング
+          renderer.render(scene, camera)
+          requestAnimationFrame(update)
+        }
+
+        update()
+      }
+
+      // ページの読み込みを待つ
+      window.addEventListener("DOMContentLoaded", init)
+    </script>
+  </body>
+</html>
